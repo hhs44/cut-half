@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "lib": ["ES2020", "DOM"],
+    "strict": true,
+    "noImplicitAny": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "useDefineForClassFields": false,
+    "baseUrl": ".",
+    "ignoreDeprecations": "5.0",
+    "paths": {
+      "cc": ["./cc-shim.d.ts"],
+      "cc/*": ["./cc-shim.d.ts"]
+    },
+    "typeRoots": ["./node_modules/@types", "./cc-shim.d.ts"]
+  },
+  "include": [
+    "assets/scripts/**/*.ts",
+    "cc-shim.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "library",
+    "temp",
+    "settings"
+  ]
+}

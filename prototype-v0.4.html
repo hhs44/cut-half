@@ -1,0 +1,2220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>切一半 v0.4 — UI 组件库 & 高保真原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DESIGN TOKENS — 切一半 v0.4
+   调色板源自 PRD 5.2：橙/薄荷/金/米白
+   ============================================================ */
+:root {
+  /* 主调色板 */
+  --orange: #FF7F50;
+  --orange-deep: #E66A3D;
+  --orange-soft: #FFE4D6;
+  --mint: #98FB98;
+  --mint-deep: #5FCC73;
+  --mint-soft: #E5FCE5;
+  --gold: #FFD700;
+  --gold-deep: #E0B800;
+  --gold-soft: #FFF4C2;
+  --cream: #FFF8F0;
+  --cream-deep: #F5EBD9;
+
+  /* 中性色 */
+  --ink: #14171E;
+  --text: #1F2533;
+  --text-2: #3A4256;
+  --muted: #7C7A72;
+  --line: #E9E3D6;
+  --line-soft: #F0EBDF;
+  --panel: #FFFFFF;
+  --bg: #F7F5F0;
+
+  /* 状态色 (失败 4 档分级) */
+  --tier1: #F59E0B; --tier1-bg: #FEF3C7; --tier1-ink: #92400E;  /* 49-51% 黄色 */
+  --tier2: #EA580C; --tier2-bg: #FFEDD5; --tier2-ink: #9A3412;  /* 45-49/51-55 橙 */
+  --tier3: #DC2626; --tier3-bg: #FEE2E2; --tier3-ink: #991B1B;  /* 40-45/55-60 红 */
+  --tier4: #991B1B; --tier4-bg: #FECACA; --tier4-ink: #7F1D1D;  /* <40/>60 深红 */
+
+  /* 圆角 / 阴影 */
+  --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 20px; --r-pill: 999px;
+  --sh-1: 0 1px 0 rgba(255,255,255,.6) inset, 0 2px 8px -2px rgba(20,23,30,.08);
+  --sh-2: 0 4px 0 rgba(0,0,0,.08), 0 6px 16px -4px rgba(20,23,30,.12);
+  --sh-3: 0 8px 24px -8px rgba(20,23,30,.2);
+  --sh-btn: 0 4px 0 var(--orange-deep), 0 8px 16px -4px rgba(255,127,80,.35);
+  --sh-btn-sm: 0 3px 0 var(--orange-deep), 0 5px 10px -2px rgba(255,127,80,.3);
+  --sh-knife: 0 0 12px 2px rgba(255,255,255,.9), 0 0 0 1px rgba(0,0,0,.5);
+}
+
+/* ============================================================
+   RESET & GLOBAL
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: 'Outfit', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(255,127,80,.05) 0%, transparent 45%),
+    radial-gradient(at 100% 0%, rgba(152,251,152,.05) 0%, transparent 45%),
+    radial-gradient(at 50% 100%, rgba(255,215,0,.04) 0%, transparent 50%);
+  background-attachment: fixed;
+}
+.wrap { max-width: 1240px; margin: 0 auto; padding: 56px 28px 96px; }
+* { text-wrap: pretty; }
+
+/* 排版 */
+header.hero {
+  padding: 44px; border-radius: 22px;
+  background: linear-gradient(135deg, #FFF8E7, #F5EBD9);
+  border: 1px solid var(--line); margin-bottom: 56px;
+  box-shadow: var(--sh-1);
+}
+header.hero h1 {
+  font-family: 'DM Serif Display', 'Source Han Serif SC', Georgia, serif;
+  font-size: 40px; font-weight: 400; line-height: 1.15; margin: 12px 0;
+  color: var(--ink);
+}
+header.hero p { color: var(--text-2); max-width: 800px; margin: 8px 0; }
+header.hero .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.tag {
+  display: inline-block; padding: 4px 12px; border-radius: var(--r-pill);
+  background: rgba(255,127,80,.12); color: var(--orange-deep);
+  font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+}
+.tag.mint { background: rgba(95,204,115,.15); color: #1A7A36; }
+.tag.gold { background: rgba(255,215,0,.2); color: #8B6A00; }
+.tag.ink  { background: rgba(20,23,30,.85); color: #fff; }
+
+h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 30px; font-weight: 400; margin: 72px 0 24px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--line);
+  color: var(--ink); display: flex; align-items: center; gap: 14px;
+}
+h2 .sec-num {
+  width: 40px; height: 40px; border-radius: 10px; font-size: 14px;
+  font-family: 'Outfit', sans-serif; font-weight: 700;
+  background: linear-gradient(135deg, var(--orange), var(--orange-deep));
+  color: #fff; display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 8px -2px rgba(255,127,80,.4);
+}
+h3 {
+  font-size: 18px; font-weight: 700; margin: 32px 0 14px; color: var(--ink);
+  display: flex; align-items: center; gap: 8px;
+}
+h3::before {
+  content: ''; width: 4px; height: 16px; background: var(--orange);
+  border-radius: 2px;
+}
+
+/* ============================================================
+   PHONE FRAME — 通用手机外壳 (iPhone 12 Pro 视觉)
+   ============================================================ */
+.phone-frame {
+  width: 320px; height: 640px;
+  border-radius: 40px; background: #14171e; padding: 12px;
+  box-shadow: var(--sh-3), 0 0 0 2px #2a2f3e;
+  position: relative;
+  margin: 0 auto;
+}
+.phone-frame::before {
+  content: ''; position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+  width: 96px; height: 26px; background: #14171e; border-radius: 13px; z-index: 5;
+}
+.phone-screen {
+  width: 100%; height: 100%;
+  border-radius: 30px; overflow: hidden;
+  position: relative;
+  display: flex; flex-direction: column;
+}
+.status-bar {
+  height: 36px;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 22px; font-size: 12px; color: var(--text-2);
+  font-weight: 700; flex-shrink: 0;
+  background: rgba(255,255,255,.0);
+}
+.status-bar.dark { color: #fff; }
+.status-bar svg { width: 14px; height: 14px; }
+
+/* 网格 + 卡片 */
+.mock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 40px;
+  margin-top: 28px;
+}
+.mock-grid.tight { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 28px; }
+.mock-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: var(--sh-1);
+}
+.mock-card .phone-frame { margin: 0 auto; }
+.mock-label {
+  font-size: 12px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.mock-label::before {
+  content: ''; width: 8px; height: 8px; border-radius: 2px; background: var(--orange);
+}
+.mock-label.alt::before { background: var(--mint-deep); }
+.mock-label.gold::before { background: var(--gold-deep); }
+.annotation {
+  background: #FEFCE8;
+  border: 1px dashed #FACC15;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-top: 16px;
+  font-size: 13px;
+  color: #854D0E;
+  line-height: 1.65;
+}
+.annotation strong { color: #713F12; }
+.annotation ul { margin: 6px 0; padding-left: 18px; }
+.annotation li { margin: 2px 0; }
+
+/* ============================================================
+   COMPONENT LIBRARY
+   ============================================================ */
+.lib-section {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 28px;
+  margin-top: 24px;
+  box-shadow: var(--sh-1);
+}
+.lib-row {
+  display: flex; flex-wrap: wrap; gap: 18px; align-items: center;
+  padding: 14px 0;
+  border-top: 1px dashed var(--line);
+}
+.lib-row:first-of-type { border-top: none; }
+.lib-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; font-weight: 700; color: var(--muted);
+  min-width: 140px;
+}
+.lib-example { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+/* 按钮 */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: inherit; font-weight: 700;
+  border: none; cursor: pointer; user-select: none;
+  border-radius: var(--r-md);
+  transition: transform .15s;
+}
+.btn:active { transform: translateY(2px); }
+.btn-primary {
+  height: 56px; padding: 0 32px; min-width: 240px;
+  background: var(--orange); color: #fff; font-size: 18px;
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-btn);
+}
+.btn-primary-sm {
+  height: 46px; padding: 0 24px; min-width: 200px;
+  background: var(--orange); color: #fff; font-size: 15px;
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-btn-sm);
+}
+.btn-secondary {
+  height: 46px; padding: 0 20px; min-width: 180px;
+  background: #fff; color: var(--text);
+  font-size: 14px; font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--r-md);
+}
+.btn-secondary:hover { border-color: var(--orange); }
+.btn-ghost {
+  height: 36px; padding: 0 14px;
+  background: transparent; color: var(--text-2);
+  font-size: 13px; font-weight: 600;
+  border: none; border-radius: var(--r-sm);
+}
+.btn-danger {
+  height: 46px; padding: 0 24px; min-width: 200px;
+  background: var(--ink); color: #fff; font-size: 15px;
+  border-radius: var(--r-md);
+  box-shadow: 0 3px 0 #000, 0 5px 10px -2px rgba(20,23,30,.4);
+}
+.btn-gold {
+  height: 48px; padding: 0 24px; min-width: 200px;
+  background: linear-gradient(135deg, #FFD700, #FFA500); color: #fff;
+  font-size: 15px;
+  border-radius: var(--r-md);
+  box-shadow: 0 3px 0 #B8860B, 0 5px 10px -2px rgba(255,165,0,.4);
+}
+.btn-icon {
+  width: 44px; height: 44px; padding: 0;
+  background: rgba(255,255,255,.85); color: var(--text);
+  font-size: 18px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+}
+.btn-icon:hover { border-color: var(--orange); color: var(--orange); }
+
+/* 刀数徽章 */
+.knife-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px;
+  font-size: 14px; font-weight: 700;
+  color: var(--text-2);
+  background: rgba(255,127,80,.1);
+  border: 1.5px solid rgba(255,127,80,.3);
+  border-radius: var(--r-pill);
+}
+.knife-badge .knife-icon { font-size: 16px; }
+.knife-badge .count {
+  color: var(--orange); font-weight: 800; font-size: 15px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.knife-badge.full { background: rgba(95,204,115,.12); border-color: rgba(95,204,115,.4); }
+.knife-badge.full .count { color: #1A7A36; }
+.knife-badge.low { background: rgba(220,38,38,.1); border-color: rgba(220,38,38,.35); }
+.knife-badge.low .count { color: #DC2626; }
+.knife-badge.zero { background: var(--ink); border-color: var(--ink); color: var(--muted); }
+.knife-badge.zero .count { color: var(--muted); }
+
+/* 道具槽 */
+.item-slot {
+  width: 58px; height: 58px;
+  border-radius: 12px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-size: 22px;
+  cursor: pointer;
+  position: relative;
+  background: #fff;
+  border: 2px solid var(--line);
+  transition: all .2s;
+}
+.item-slot .name {
+  font-size: 9px; font-weight: 700; color: var(--text-2);
+  margin-top: 2px; letter-spacing: .04em;
+}
+.item-slot.owned {
+  border-color: var(--orange);
+  background: linear-gradient(135deg, #FFF5E8, #FFE8D4);
+  box-shadow: 0 3px 8px -2px rgba(255,127,80,.35);
+}
+.item-slot.owned .name { color: var(--orange-deep); }
+.item-slot.disabled {
+  opacity: .4;
+  background: #F5F5F5;
+  border-style: dashed;
+}
+.item-slot.disabled .name { color: var(--muted); }
+.item-slot.owned::after {
+  content: ''; position: absolute; top: -3px; right: -3px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--orange); color: white;
+  font-size: 9px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,.2);
+}
+
+/* 道具图标 (SVG) */
+.icon-svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+/* 切割线 */
+.cut-line {
+  position: absolute; left: 50%;
+  width: 220px; height: 4px;
+  background: #fff;
+  box-shadow: var(--sh-knife);
+  border-radius: 2px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 3;
+}
+.cut-line::before, .cut-line::after {
+  content: ''; position: absolute; top: 50%;
+  width: 12px; height: 12px;
+  background: #fff; border-radius: 50%;
+  transform: translateY(-50%);
+  box-shadow: 0 0 8px rgba(255,255,255,.8), 0 0 0 1px rgba(0,0,0,.5);
+}
+.cut-line::before { left: -6px; }
+.cut-line::after { right: -6px; }
+.cut-line.glow::after { box-shadow: 0 0 16px 4px rgba(255,215,0,.7), 0 0 0 1px rgba(0,0,0,.5); background: var(--gold); }
+
+/* 矩形物体 */
+.cut-object {
+  width: 180px; height: 240px; border-radius: 16px;
+  background: linear-gradient(135deg, #FF9A6C, var(--orange) 60%, var(--orange-deep));
+  position: relative;
+  box-shadow: 0 16px 28px -10px rgba(255,127,80,.45), inset 0 -4px 0 rgba(0,0,0,.1), inset 0 2px 0 rgba(255,255,255,.3);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.cut-object::before {
+  content: ''; position: absolute; top: 14px; left: 14px; right: 14px; bottom: 14px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,.32), transparent 55%);
+}
+.cut-object::after {
+  content: ''; position: absolute; top: 8px; left: 8px; right: 8px; height: 3px;
+  background: rgba(255,255,255,.55);
+  border-radius: 2px;
+}
+.cut-object .edge-hint {
+  position: absolute; left: 0; right: 0; height: 4px;
+  background: rgba(255,255,255,.3);
+  pointer-events: none;
+}
+.cut-object .edge-hint.top { top: 0; }
+.cut-object .edge-hint.bot { bottom: 0; }
+
+/* 进度条 (50% 命中条) */
+.progress-50 {
+  position: relative; width: 100%; height: 14px;
+  background: var(--line-soft);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+.progress-50 .bar {
+  position: absolute; top: 0; bottom: 0; left: 0;
+  background: linear-gradient(90deg, var(--orange), var(--gold));
+  border-radius: var(--r-pill);
+}
+.progress-50 .marker-50 {
+  position: absolute; top: -2px; bottom: -2px; left: 50%;
+  width: 3px; background: var(--ink);
+  transform: translateX(-50%);
+  border-radius: 2px;
+}
+.progress-50 .marker-50::after {
+  content: '50%'; position: absolute; bottom: -22px; left: 50%;
+  transform: translateX(-50%);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700; color: var(--ink);
+  background: #fff; padding: 1px 5px; border-radius: 4px;
+  border: 1px solid var(--line); white-space: nowrap;
+}
+
+/* 结果百分比 */
+.pct-display {
+  font-family: 'Outfit', sans-serif;
+  font-size: 72px; font-weight: 800;
+  line-height: 1; letter-spacing: -.02em;
+}
+.pct-display.win { color: var(--orange); }
+.pct-display.tier1 { color: var(--tier1); }
+.pct-display.tier2 { color: var(--tier2); }
+.pct-display.tier3 { color: var(--tier3); }
+.pct-display.tier4 { color: var(--tier4); }
+
+/* 倒计时 */
+.countdown-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  background: var(--ink); color: #fff;
+  border-radius: var(--r-pill);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: .04em;
+}
+.countdown-pill .seconds {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px; font-weight: 800; color: var(--gold);
+  min-width: 14px; text-align: center;
+}
+.countdown-ring {
+  width: 56px; height: 56px; position: relative;
+}
+.countdown-ring svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+.countdown-ring circle { fill: none; stroke-width: 6; }
+.countdown-ring .track { stroke: var(--line); }
+.countdown-ring .bar {
+  stroke: var(--orange); stroke-linecap: round;
+  stroke-dasharray: 138.23; stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1s linear;
+}
+.countdown-ring .num {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px; font-weight: 800; color: var(--ink);
+}
+
+/* 提示气泡 */
+.tutorial-bubble {
+  position: relative;
+  background: var(--ink); color: #fff;
+  padding: 10px 16px;
+  border-radius: 14px;
+  font-size: 13px; font-weight: 600;
+  box-shadow: 0 6px 16px -4px rgba(0,0,0,.35);
+  animation: bounce 1.6s ease-in-out infinite;
+  display: inline-block;
+}
+.tutorial-bubble::after {
+  content: ''; position: absolute; bottom: -7px; left: 30px;
+  border: 7px solid transparent; border-top-color: var(--ink);
+}
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* 标签/徽章 */
+.lv-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: linear-gradient(135deg, var(--gold), #FFA500);
+  color: #fff; font-size: 12px; font-weight: 800;
+  border-radius: 6px;
+  letter-spacing: .04em;
+  box-shadow: 0 2px 4px -1px rgba(255,165,0,.3);
+}
+
+/* 失败/通关文案胶囊 */
+.fail-msg {
+  display: inline-block;
+  padding: 8px 18px;
+  border-radius: var(--r-pill);
+  font-size: 14px; font-weight: 700;
+}
+.fail-msg.tier1 { background: var(--tier1-bg); color: var(--tier1-ink); }
+.fail-msg.tier2 { background: var(--tier2-bg); color: var(--tier2-ink); }
+.fail-msg.tier3 { background: var(--tier3-bg); color: var(--tier3-ink); }
+.fail-msg.tier4 { background: var(--tier4-bg); color: var(--tier4-ink); }
+.fail-msg.win   { background: var(--mint-soft); color: #1A7A36; }
+
+/* ============================================================
+   SCREEN-SPECIFIC STYLES
+   ============================================================ */
+
+/* === 01 主菜单 === */
+.menu-screen {
+  background: linear-gradient(180deg, var(--cream) 0%, #fff 60%, #FFF5E8 100%);
+  align-items: center; padding: 60px 24px 80px;
+  position: relative;
+  overflow: hidden;
+}
+.menu-screen::before {
+  content: ''; position: absolute;
+  top: -80px; right: -80px; width: 240px; height: 240px;
+  background: radial-gradient(circle, rgba(255,215,0,.25), transparent 70%);
+  pointer-events: none;
+}
+.menu-screen::after {
+  content: ''; position: absolute;
+  bottom: -100px; left: -100px; width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(152,251,152,.3), transparent 70%);
+  pointer-events: none;
+}
+.menu-title { text-align: center; margin-top: 60px; position: relative; z-index: 2; }
+.menu-title .ch {
+  font-family: 'DM Serif Display', 'Source Han Serif SC', serif;
+  font-size: 64px; font-weight: 700;
+  color: var(--orange);
+  text-shadow: 4px 4px 0 var(--gold), 8px 8px 0 var(--mint);
+  letter-spacing: 6px;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+.menu-title .sub {
+  font-size: 14px; color: var(--text-2);
+  letter-spacing: 6px; font-weight: 700;
+  margin-bottom: 4px;
+}
+.menu-title .tagline {
+  font-size: 12px; color: var(--muted);
+  letter-spacing: 2px; font-weight: 500;
+}
+.menu-ornament {
+  width: 100%; height: 30px; position: relative;
+  margin: 24px 0 32px; display: flex; align-items: center; justify-content: center;
+  gap: 10px;
+}
+.menu-ornament::before, .menu-ornament::after {
+  content: ''; flex: 1; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.menu-ornament .star { color: var(--orange); font-size: 18px; }
+.menu-ornament .star.mint { color: var(--mint-deep); }
+.menu-buttons {
+  display: flex; flex-direction: column; gap: 14px; width: 240px; position: relative; z-index: 2;
+}
+.menu-footer {
+  display: flex; gap: 16px; font-size: 11px; color: var(--muted);
+  margin-top: 24px; font-weight: 600;
+  position: relative; z-index: 2;
+}
+.menu-footer .item { display: flex; align-items: center; gap: 4px; }
+.menu-footer .item .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mint-deep); }
+.menu-footer .item.off .dot { background: var(--line); }
+
+/* === 02 引导 === */
+.guide-screen { background: var(--cream); padding: 0; }
+.guide-mask {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 45%, transparent 25%, rgba(20,23,30,.55) 55%);
+  pointer-events: none;
+}
+.guide-bubble {
+  position: absolute;
+  background: var(--ink); color: #fff;
+  padding: 12px 18px;
+  border-radius: 16px;
+  font-size: 13px; font-weight: 700;
+  box-shadow: 0 8px 20px -4px rgba(0,0,0,.4);
+  animation: bounce 1.6s ease-in-out infinite;
+  z-index: 4;
+  max-width: 220px;
+  line-height: 1.5;
+}
+.guide-bubble.top { top: 70px; right: 20px; }
+.guide-bubble.top::after {
+  content: ''; position: absolute; top: 100%; right: 30px;
+  border: 8px solid transparent; border-top-color: var(--ink);
+}
+.guide-bubble.mid { top: 130px; left: 50%; transform: translateX(-50%); }
+.guide-bubble.mid::after {
+  content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 8px solid transparent; border-top-color: var(--ink);
+}
+.guide-finger {
+  position: absolute;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.5);
+  border: 2px solid rgba(255,255,255,.9);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  z-index: 4;
+  animation: bounce 1.4s ease-in-out infinite;
+}
+
+/* === 03 游戏场景 === */
+.game-screen { background: var(--cream); padding: 0; }
+.game-header {
+  height: 52px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 14px;
+  background: rgba(255,255,255,.78);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+  flex-shrink: 0;
+}
+.game-back {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--line-soft);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-2); font-size: 18px; font-weight: 800;
+}
+.game-back:hover { background: var(--orange-soft); color: var(--orange); }
+.game-title { display: flex; align-items: center; gap: 8px; }
+.game-title .name { font-size: 15px; font-weight: 700; color: var(--ink); }
+.game-canvas {
+  flex: 1; position: relative;
+  background:
+    radial-gradient(ellipse at top, #fff 0%, var(--cream) 70%);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; min-height: 0;
+}
+.game-canvas::before {
+  content: ''; position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,127,80,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,127,80,.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+}
+.game-footer {
+  background: rgba(255,255,255,.85);
+  border-top: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+  padding: 10px 12px 12px;
+  flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.game-footer-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+}
+.game-items-row { display: flex; gap: 8px; }
+.game-items-row .item-slot { width: 46px; height: 46px; font-size: 18px; }
+.game-items-row .item-slot .name { font-size: 8px; }
+.game-hint {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+  font-size: 11px; color: var(--text-2);
+  background: rgba(255,255,255,.85); padding: 4px 10px;
+  border-radius: var(--r-pill); border: 1px solid var(--line);
+  z-index: 2;
+}
+.game-hint .target { color: var(--orange); font-weight: 700; }
+
+/* === 04 切割动画 === */
+.cut-anim-screen { background: var(--cream); }
+.cut-anim-stage {
+  flex: 1; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at top, #fff 0%, var(--cream) 70%);
+}
+.cut-anim-object {
+  width: 180px; height: 240px; position: relative;
+}
+.cut-anim-object .part {
+  position: absolute; left: 0; right: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #FF9A6C, var(--orange) 60%, var(--orange-deep));
+  box-shadow: 0 16px 28px -10px rgba(255,127,80,.4);
+}
+.cut-anim-object .part-top { top: 0; height: 48%; }
+.cut-anim-object .part-bot { bottom: 0; height: 48%; animation: fall .6s ease-in .2s forwards; }
+.cut-anim-object .part-top .part-inner, .cut-anim-object .part-bot .part-inner {
+  position: absolute; inset: 0;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255,255,255,.3), transparent 60%);
+}
+.cut-anim-object .part-bot .cut-face {
+  position: absolute; top: 0; left: 0; right: 0; height: 6px;
+  background: linear-gradient(180deg, rgba(255,127,80,.4), transparent);
+  border-radius: 3px;
+}
+@keyframes fall {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(80px); opacity: .8; }
+}
+.cut-pct-pop {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Outfit', sans-serif;
+  font-size: 88px; font-weight: 800;
+  color: var(--orange);
+  text-shadow: 4px 4px 0 var(--gold), 8px 8px 24px rgba(0,0,0,.15);
+  animation: pop 0.5s ease-out;
+  z-index: 10;
+  letter-spacing: -.02em;
+}
+@keyframes pop {
+  0% { transform: translate(-50%, -50%) scale(0); }
+  60% { transform: translate(-50%, -50%) scale(1.15); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* === 05 通关画面 === */
+.result-screen {
+  background: linear-gradient(180deg, #fff 0%, var(--gold-soft) 60%, var(--orange-soft) 100%);
+  align-items: center; justify-content: center; padding: 40px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.result-screen::before {
+  content: '🎉'; position: absolute;
+  top: 80px; left: 30px; font-size: 32px;
+  animation: float 3s ease-in-out infinite;
+}
+.result-screen::after {
+  content: '✨'; position: absolute;
+  top: 130px; right: 40px; font-size: 28px;
+  animation: float 2.5s ease-in-out infinite reverse;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(15deg); }
+}
+.result-emoji {
+  font-size: 64px; line-height: 1;
+  margin-bottom: 8px; z-index: 2;
+  animation: pop .5s ease-out;
+}
+.result-title {
+  font-family: 'DM Serif Display', 'Source Han Serif SC', serif;
+  font-size: 32px; color: var(--orange);
+  text-shadow: 3px 3px 0 var(--gold);
+  margin: 6px 0;
+  font-weight: 700; z-index: 2;
+}
+.result-stats {
+  background: rgba(255,255,255,.7);
+  border: 2px solid var(--gold);
+  border-radius: var(--r-md);
+  padding: 12px 18px;
+  margin: 12px 0;
+  width: 240px;
+  z-index: 2;
+  box-shadow: 0 4px 12px -4px rgba(255,215,0,.3);
+}
+.result-stats .row {
+  display: flex; justify-content: space-between;
+  font-size: 13px; color: var(--text-2);
+  margin: 4px 0;
+}
+.result-stats .row .v { font-weight: 700; color: var(--ink); font-family: 'JetBrains Mono', monospace; }
+.result-stats .row .v.gold { color: var(--orange-deep); }
+.result-buttons { display: flex; flex-direction: column; gap: 12px; width: 240px; z-index: 2; margin-top: 12px; }
+
+/* === 06 失败画面 === */
+.fail-screen {
+  background: linear-gradient(180deg, #FFF5F0 0%, #fff 100%);
+  align-items: center; justify-content: center; padding: 32px 22px;
+}
+.fail-emoji { font-size: 48px; line-height: 1; margin-bottom: 4px; }
+.fail-pct { margin: 6px 0; }
+.fail-detail {
+  background: rgba(0,0,0,.04);
+  border-radius: 10px; padding: 8px 14px;
+  margin: 8px 0 4px; font-size: 12px; color: var(--text-2);
+  text-align: center;
+  line-height: 1.7;
+}
+.fail-detail strong { color: var(--ink); font-size: 13px; }
+.fail-items-row {
+  display: flex; gap: 10px;
+  background: rgba(255,255,255,.7);
+  border-radius: var(--r-md);
+  padding: 10px;
+  border: 1.5px dashed var(--line);
+  margin: 4px 0;
+}
+.fail-buttons { display: flex; flex-direction: column; gap: 10px; width: 220px; margin-top: 6px; }
+
+/* === 07 道具使用反馈 === */
+.toast {
+  position: absolute; top: 60px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink); color: #fff;
+  padding: 10px 18px;
+  border-radius: var(--r-pill);
+  font-size: 13px; font-weight: 700;
+  box-shadow: 0 6px 16px -4px rgba(0,0,0,.35);
+  display: flex; align-items: center; gap: 8px;
+  z-index: 20;
+  animation: slideDown .4s ease-out;
+}
+.toast .icon { font-size: 16px; }
+.toast.win { background: var(--mint-deep); }
+.toast.revoke { background: var(--orange); }
+@keyframes slideDown {
+  0% { transform: translateX(-50%) translateY(-30px); opacity: 0; }
+  100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+/* === 08 激励视频 === */
+.ad-overlay {
+  position: absolute; inset: 0;
+  background: rgba(20,23,30,.85);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; padding: 20px;
+}
+.ad-card {
+  background: #fff;
+  border-radius: var(--r-xl);
+  padding: 28px 24px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 40px -8px rgba(0,0,0,.5);
+}
+.ad-icon {
+  width: 72px; height: 72px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), #FFA500);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px;
+  box-shadow: 0 8px 20px -4px rgba(255,165,0,.5);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+.ad-title {
+  font-size: 18px; font-weight: 800; color: var(--ink);
+  margin: 8px 0 4px;
+}
+.ad-sub {
+  font-size: 12px; color: var(--text-2);
+  margin-bottom: 16px; line-height: 1.5;
+}
+.ad-reward {
+  background: var(--gold-soft);
+  border: 1.5px dashed var(--gold);
+  border-radius: var(--r-md);
+  padding: 10px;
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px;
+  text-align: left;
+}
+.ad-reward .emoji { font-size: 24px; }
+.ad-reward .info { flex: 1; }
+.ad-reward .name { font-size: 13px; font-weight: 700; color: var(--ink); }
+.ad-reward .desc { font-size: 11px; color: var(--text-2); }
+.ad-skip {
+  position: absolute; top: 16px; right: 16px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700;
+  z-index: 110;
+}
+
+/* === 09 GameOver === */
+.gameover-screen {
+  background: linear-gradient(180deg, #2A1820 0%, #1A0E14 100%);
+  color: #fff;
+  align-items: center; justify-content: center; padding: 32px 22px;
+}
+.gameover-screen .status-bar { color: rgba(255,255,255,.7); }
+.gameover-emoji { font-size: 56px; line-height: 1; margin-bottom: 8px; opacity: .9; }
+.gameover-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 30px; color: var(--gold);
+  text-shadow: 3px 3px 0 var(--orange-deep);
+  margin: 6px 0;
+  font-weight: 700;
+}
+.gameover-stats {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--r-md);
+  padding: 14px 18px;
+  margin: 12px 0;
+  width: 240px;
+}
+.gameover-stats .row {
+  display: flex; justify-content: space-between;
+  font-size: 13px; color: rgba(255,255,255,.7);
+  margin: 4px 0;
+}
+.gameover-stats .row .v { font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; }
+.gameover-buttons { display: flex; flex-direction: column; gap: 10px; width: 220px; margin-top: 6px; }
+.gameover-screen .btn-primary {
+  background: linear-gradient(135deg, var(--gold), #FFA500);
+  box-shadow: 0 4px 0 #B8860B, 0 8px 16px -4px rgba(255,165,0,.5);
+}
+.gameover-screen .btn-secondary { background: rgba(255,255,255,.1); color: #fff; border-color: rgba(255,255,255,.2); }
+
+/* === 10 暂停 === */
+.pause-screen { background: rgba(20,23,30,.6); backdrop-filter: blur(8px); }
+.pause-card {
+  margin: auto 0;
+  background: #fff;
+  border-radius: var(--r-xl);
+  padding: 24px;
+  margin: auto 20px;
+  text-align: center;
+  box-shadow: 0 20px 40px -8px rgba(0,0,0,.3);
+}
+.pause-emoji { font-size: 40px; margin-bottom: 6px; }
+.pause-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 24px; color: var(--ink);
+  margin: 4px 0 12px;
+  font-weight: 700;
+}
+.pause-buttons { display: flex; flex-direction: column; gap: 10px; }
+
+/* === 11 设置 === */
+.settings-screen { background: var(--cream); }
+.settings-content { flex: 1; padding: 16px 18px; overflow-y: auto; }
+.settings-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 24px; color: var(--ink);
+  margin: 12px 0 18px;
+  font-weight: 700;
+}
+.settings-group {
+  background: #fff;
+  border-radius: var(--r-md);
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.settings-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px;
+  border-top: 1px solid var(--line-soft);
+}
+.settings-item:first-child { border-top: none; }
+.settings-item .left { display: flex; align-items: center; gap: 10px; }
+.settings-item .icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--orange-soft); color: var(--orange);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.settings-item .name { font-size: 14px; font-weight: 600; color: var(--ink); }
+.settings-item .desc { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+/* 开关 */
+.toggle {
+  position: relative; width: 44px; height: 26px;
+  background: var(--line); border-radius: 13px;
+  cursor: pointer; transition: background .2s;
+}
+.toggle::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,.2);
+  transition: left .2s;
+}
+.toggle.on { background: var(--mint-deep); }
+.toggle.on::after { left: 21px; }
+
+/* ============================================================
+   杂项
+   ============================================================ */
+.spec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px; margin: 16px 0;
+}
+.spec-card {
+  padding: 18px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+.spec-card .title {
+  font-size: 12px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em;
+  margin-bottom: 8px;
+}
+.spec-card .val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px; color: var(--ink); font-weight: 700;
+}
+.color-swatch {
+  display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0;
+}
+.swatch {
+  flex: 1; min-width: 140px;
+  padding: 24px 16px;
+  border-radius: var(--r-md);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.swatch .hex { font-size: 16px; font-weight: 800; }
+.swatch .name { font-size: 11px; opacity: .85; text-transform: uppercase; letter-spacing: .06em; }
+footer {
+  margin-top: 80px; padding-top: 32px;
+  border-top: 1px solid var(--line);
+  text-align: center; color: var(--muted); font-size: 13px;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- =================== HERO =================== -->
+  <header class="hero">
+    <div class="meta">
+      <span class="tag">v0.4 原型图</span>
+      <span class="tag mint">3 刀机制</span>
+      <span class="tag gold">2 道具 + 倒计时</span>
+      <span class="tag ink">抖音小游戏</span>
+    </div>
+    <h1>切一半 — UI 组件库 & 高保真原型</h1>
+    <p>基于 PRD v0.4 + ITEMS-DESIGN.md 的全量 UI 升级。包含 <strong>12 个屏幕状态 + 1 套可复用组件库 + 设计规范摘要</strong>。</p>
+    <p style="color: var(--muted); font-size: 13px;">设备：iPhone 12 Pro (390×844) · 抖音小游戏竖屏 · 视觉风格沿用 v0.3（已迭代 5 段）</p>
+  </header>
+
+  <!-- =================== UI 组件库 =================== -->
+  <h2><span class="sec-num">00</span>UI 组件库（可复用元素）</h2>
+  <p style="color: var(--text-2);">所有屏幕共享的原子组件。后续场景只引用，不再重写样式。</p>
+
+  <div class="lib-section">
+    <h3>按钮 Buttons</h3>
+    <div class="lib-row">
+      <div class="lib-label">btn-primary</div>
+      <div class="lib-example">
+        <button class="btn btn-primary">▶ 开始游戏</button>
+        <button class="btn btn-primary">✂ 切 割</button>
+        <button class="btn btn-primary">↻ 再来一局</button>
+      </div>
+    </div>
+    <div class="lib-row">
+      <div class="lib-label">btn-primary-sm</div>
+      <div class="lib-example">
+        <button class="btn btn-primary-sm">继续游戏</button>
+        <button class="btn btn-primary-sm">▶ 下一步</button>
+      </div>
+    </div>
+    <div class="lib-row">
+      <div class="lib-label">btn-secondary</div>
+      <div class="lib-example">
+        <button class="btn btn-secondary">⚙ 设置</button>
+        <button class="btn btn-secondary">返回菜单</button>
+        <button class="btn btn-secondary">查看历史</button>
+      </div>
+    </div>
+    <div class="lib-row">
+      <div class="lib-label">btn-gold</div>
+      <div class="lib-example">
+        <button class="btn btn-gold">📺 看广告 + 1 刀</button>
+        <button class="btn btn-gold">📺 看广告获道具</button>
+      </div>
+    </div>
+    <div class="lib-row">
+      <div class="lib-label">btn-danger</div>
+      <div class="lib-example">
+        <button class="btn btn-danger">↻ 重新开始</button>
+        <button class="btn btn-danger">放弃本局</button>
+      </div>
+    </div>
+    <div class="lib-row">
+      <div class="lib-label">btn-ghost / icon</div>
+      <div class="lib-example">
+        <button class="btn btn-ghost">取消</button>
+        <button class="btn btn-icon">‹</button>
+        <button class="btn btn-icon">⚙</button>
+        <button class="btn btn-icon">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lib-section">
+    <h3>刀数徽章 KnifeBadge</h3>
+    <div class="lib-row">
+      <div class="lib-label">full / normal / low / zero</div>
+      <div class="lib-example">
+        <span class="knife-badge full"><span class="knife-icon">🔪</span><span class="count">3/3</span></span>
+        <span class="knife-badge"><span class="knife-icon">🔪</span><span class="count">2/3</span></span>
+        <span class="knife-badge low"><span class="knife-icon">🔪</span><span class="count">1/3</span></span>
+        <span class="knife-badge zero"><span class="knife-icon">🔪</span><span class="count">0/3</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="lib-section">
+    <h3>道具槽 ItemSlot</h3>
+    <div class="lib-row">
+      <div class="lib-label">owned (可点)</div>
+      <div class="lib-example">
+        <div class="item-slot owned">⏪<span class="name">撤销</span></div>
+        <div class="item-slot owned">🔪<span class="name">再切</span></div>
+        <div class="item-slot owned">✂️<span class="name">减半</span></div>
+      </div>
+    </div>
+    <div class="lib-row">
+      <div class="lib-label">disabled (灰色)</div>
+      <div class="lib-example">
+        <div class="item-slot disabled">⏪<span class="name">撤销</span></div>
+        <div class="item-slot disabled">🔪<span class="name">再切</span></div>
+        <div class="item-slot disabled">✂️<span class="name">减半</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lib-section">
+    <h3>切割线 CutLine</h3>
+    <div class="lib-row">
+      <div class="lib-label">default</div>
+      <div class="lib-example">
+        <div style="position:relative; width:220px; height:30px; background: var(--orange-soft); border-radius: 8px;">
+          <div class="cut-line" style="top: 50%;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="lib-row">
+      <div class="lib-label">glow (接近 50% 提示)</div>
+      <div class="lib-example">
+        <div style="position:relative; width:220px; height:30px; background: var(--gold-soft); border-radius: 8px;">
+          <div class="cut-line glow" style="top: 50%;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lib-section">
+    <h3>矩形物体 CutObject</h3>
+    <div class="lib-row">
+      <div class="lib-label">basic / 矩形</div>
+      <div class="lib-example">
+        <div class="cut-object" style="width: 120px; height: 160px;">
+          <div class="edge-hint top"></div>
+          <div class="edge-hint bot"></div>
+        </div>
+        <div class="cut-object" style="width: 100px; height: 100px;">
+          <div class="edge-hint top"></div>
+          <div class="edge-hint bot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lib-section">
+    <h3>结果百分比 PercentageDisplay</h3>
+    <div class="lib-row">
+      <div class="lib-label">5 档颜色</div>
+      <div class="lib-example">
+        <span class="pct-display win">50%</span>
+        <span class="pct-display tier1">49%</span>
+        <span class="pct-display tier2">46%</span>
+        <span class="pct-display tier3">42%</span>
+        <span class="pct-display tier4">25%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="lib-section">
+    <h3>倒计时 Countdown</h3>
+    <div class="lib-row">
+      <div class="lib-label">pill / ring</div>
+      <div class="lib-example">
+        <span class="countdown-pill">⏰ <span class="seconds">3</span> 秒后自动撤销</span>
+        <div class="countdown-ring">
+          <svg viewBox="0 0 50 50">
+            <circle class="track" cx="25" cy="25" r="22"/>
+            <circle class="bar" cx="25" cy="25" r="22" style="stroke-dashoffset: 46;"/>
+          </svg>
+          <div class="num">2</div>
+        </div>
+        <div class="countdown-ring">
+          <svg viewBox="0 0 50 50">
+            <circle class="track" cx="25" cy="25" r="22"/>
+            <circle class="bar" cx="25" cy="25" r="22"/>
+          </svg>
+          <div class="num">3</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lib-section">
+    <h3>失败/通关文案胶囊 Message</h3>
+    <div class="lib-row">
+      <div class="lib-label">4 档情绪色</div>
+      <div class="lib-example">
+        <span class="fail-msg tier1">差 1%！就差一点了～</span>
+        <span class="fail-msg tier2">差 4%，再来！</span>
+        <span class="fail-msg tier3">差 8%，再仔细看看</span>
+        <span class="fail-msg tier4">差太远啦，物体中心在哪？</span>
+        <span class="fail-msg win">完美！一刀 50%！</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="lib-section">
+    <h3>50% 命中条 ProgressBar</h3>
+    <div class="lib-row">
+      <div class="lib-label">tutorial / 可视化</div>
+      <div class="lib-example" style="width: 100%; max-width: 400px;">
+        <div class="progress-50" style="margin-top: 22px;">
+          <div class="bar" style="width: 49%;"></div>
+          <div class="marker-50"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lib-section">
+    <h3>开关 Toggle & 标签 Badge</h3>
+    <div class="lib-row">
+      <div class="lib-label">toggle on/off</div>
+      <div class="lib-example">
+        <div class="toggle on"></div>
+        <div class="toggle"></div>
+      </div>
+    </div>
+    <div class="lib-row">
+      <div class="lib-label">level badge</div>
+      <div class="lib-example">
+        <span class="lv-badge">Lv.1</span>
+        <span class="lv-badge">Lv.5</span>
+        <span class="lv-badge">Lv.20</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 01 主菜单 =================== -->
+  <h2><span class="sec-num">01</span>主菜单 MenuScene</h2>
+  <div class="mock-grid">
+    <div class="mock-card">
+      <div class="mock-label">主菜单 — 默认状态</div>
+      <div class="phone-frame">
+        <div class="phone-screen menu-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="menu-title">
+            <div class="ch">切一半</div>
+            <div class="sub">CUT IT RIGHT</div>
+            <div class="tagline">精准切割 50%</div>
+          </div>
+          <div class="menu-ornament">
+            <span class="star">✦</span>
+            <span class="star mint">✦</span>
+            <span class="star">✦</span>
+          </div>
+          <div class="menu-buttons">
+            <button class="btn btn-primary">▶ 开始游戏</button>
+            <button class="btn btn-secondary">⚙ 设置</button>
+          </div>
+          <div class="menu-footer">
+            <div class="item"><span class="dot"></span>音乐开</div>
+            <div class="item"><span class="dot"></span>音效开</div>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>设计要点：</strong>
+        <ul>
+          <li>标题三层描边（橙→金→薄荷）形成立体感</li>
+          <li>装饰条用渐变金线 + 3 颗星（橙/薄荷/橙）</li>
+          <li>主按钮带"按下阴影"，强调可点</li>
+          <li>底部状态点：音乐/音效开关状态可视化</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 02 引导 =================== -->
+  <h2><span class="sec-num">02</span>首次引导 Tutorial</h2>
+  <div class="mock-grid">
+    <div class="mock-card">
+      <div class="mock-label">第 1 步 — 提示气泡</div>
+      <div class="phone-frame">
+        <div class="phone-screen game-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="game-header">
+            <div class="game-back">‹</div>
+            <div class="game-title"><span class="lv-badge">Lv.1</span><span class="name">矩形</span></div>
+            <span class="knife-badge full"><span class="knife-icon">🔪</span><span class="count">3/3</span></span>
+          </div>
+          <div class="game-canvas">
+            <div class="tutorial-bubble top">切到中间试试～</div>
+            <div class="cut-object">
+              <div class="edge-hint top"></div>
+              <div class="edge-hint bot"></div>
+              <div class="cut-line" style="top: 25%;"></div>
+            </div>
+          </div>
+          <div class="game-footer">
+            <div class="game-footer-row">
+              <span class="knife-badge full"><span class="knife-icon">🔪</span><span class="count">3/3</span></span>
+              <div class="game-items-row">
+                <div class="item-slot disabled">⏪<span class="name">撤销</span></div>
+                <div class="item-slot disabled">🔪<span class="name">再切</span></div>
+              </div>
+            </div>
+            <button class="btn btn-primary-sm">✂ 切 割</button>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>首次进入关卡：</strong>
+        <ul>
+          <li>右上方弹出黑色气泡"切到中间试试～"，3 秒后自动消失</li>
+          <li>切割线默认在物体底部（25% 处），保证新手先失败再成功</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mock-card">
+      <div class="mock-label">第 2 步 — 手指动画</div>
+      <div class="phone-frame">
+        <div class="phone-screen guide-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="game-header">
+            <div class="game-back">‹</div>
+            <div class="game-title"><span class="lv-badge">Lv.1</span><span class="name">矩形</span></div>
+            <span class="knife-badge"><span class="knife-icon">🔪</span><span class="count">2/3</span></span>
+          </div>
+          <div class="game-canvas" style="position: relative;">
+            <div class="guide-mask"></div>
+            <div class="tutorial-bubble mid">拖动到这里试试</div>
+            <div class="cut-object">
+              <div class="edge-hint top"></div>
+              <div class="edge-hint bot"></div>
+              <div class="cut-line" style="top: 50%;"></div>
+            </div>
+            <div class="guide-finger" style="bottom: 200px; left: 50%; transform: translateX(-50%);">👆</div>
+          </div>
+          <div class="game-footer">
+            <button class="btn btn-primary-sm">✂ 切 割</button>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>第 2 次进入关卡：</strong>
+        <ul>
+          <li>气泡变更为"拖动到这里试试"</li>
+          <li>出现手指 emoji + 半透明圆形，引导拖动</li>
+          <li>背景半透明蒙层聚焦切割物体</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 03 游戏场景 =================== -->
+  <h2><span class="sec-num">03</span>游戏场景 GameScene</h2>
+  <div class="mock-grid">
+
+    <div class="mock-card">
+      <div class="mock-label">默认 — 3 刀 + 道具栏</div>
+      <div class="phone-frame">
+        <div class="phone-screen game-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="game-header">
+            <div class="game-back">‹</div>
+            <div class="game-title"><span class="lv-badge">Lv.1</span><span class="name">矩形</span></div>
+            <span class="knife-badge full"><span class="knife-icon">🔪</span><span class="count">3/3</span></span>
+          </div>
+          <div class="game-canvas">
+            <div class="game-hint">拖动白线 · 目标 <span class="target">50%</span></div>
+            <div class="cut-object">
+              <div class="edge-hint top"></div>
+              <div class="edge-hint bot"></div>
+              <div class="cut-line" style="top: 25%;"></div>
+            </div>
+          </div>
+          <div class="game-footer">
+            <div class="game-footer-row">
+              <span class="knife-badge full"><span class="knife-icon">🔪</span><span class="count">3/3</span></span>
+              <div class="game-items-row">
+                <div class="item-slot owned">⏪<span class="name">撤销</span></div>
+                <div class="item-slot owned">🔪<span class="name">再切</span></div>
+              </div>
+            </div>
+            <button class="btn btn-primary-sm">✂ 切 割</button>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>游戏内 HUD：</strong>
+        <ul>
+          <li>顶部：返回 + 关卡徽章 + 刀数徽章（带状态色）</li>
+          <li>中间：矩形物体 + 切割线 + 上下边缘微高亮</li>
+          <li>顶部 hint：拖动白线 · 目标 50%</li>
+          <li>底部：刀数 + 道具栏（实心=拥有，灰=无）+ 切割按钮</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mock-card">
+      <div class="mock-label">接近 50% — 切割线发光</div>
+      <div class="phone-frame">
+        <div class="phone-screen game-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="game-header">
+            <div class="game-back">‹</div>
+            <div class="game-title"><span class="lv-badge">Lv.1</span><span class="name">矩形</span></div>
+            <span class="knife-badge"><span class="knife-icon">🔪</span><span class="count">2/3</span></span>
+          </div>
+          <div class="game-canvas">
+            <div class="game-hint" style="background: var(--gold-soft); color: var(--orange-deep);">⚡ 接近目标</div>
+            <div class="cut-object">
+              <div class="edge-hint top"></div>
+              <div class="edge-hint bot"></div>
+              <div class="cut-line glow" style="top: 50%;"></div>
+            </div>
+          </div>
+          <div class="game-footer">
+            <div class="game-footer-row">
+              <span class="knife-badge"><span class="knife-icon">🔪</span><span class="count">2/3</span></span>
+              <div class="game-items-row">
+                <div class="item-slot owned">⏪<span class="name">撤销</span></div>
+                <div class="item-slot owned">🔪<span class="name">再切</span></div>
+              </div>
+            </div>
+            <button class="btn btn-primary-sm" style="animation: pulse 1.2s ease-in-out infinite;">✂ 切 割</button>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>临界反馈（M3+ 可选）：</strong>
+        <ul>
+          <li>当切到 ±1% 内时，切割线右端变金色发光</li>
+          <li>顶部 hint 切换为"⚡ 接近目标"</li>
+          <li>切割按钮轻微 pulse 动画，提示可点</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mock-card">
+      <div class="mock-label">低刀数 — 警示态</div>
+      <div class="phone-frame">
+        <div class="phone-screen game-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="game-header">
+            <div class="game-back">‹</div>
+            <div class="game-title"><span class="lv-badge">Lv.1</span><span class="name">矩形</span></div>
+            <span class="knife-badge low"><span class="knife-icon">🔪</span><span class="count">1/3</span></span>
+          </div>
+          <div class="game-canvas">
+            <div class="game-hint" style="background: #FEE2E2; color: #991B1B;">⚠ 最后 1 刀</div>
+            <div class="cut-object">
+              <div class="edge-hint top"></div>
+              <div class="edge-hint bot"></div>
+              <div class="cut-line" style="top: 50%;"></div>
+            </div>
+          </div>
+          <div class="game-footer">
+            <div class="game-footer-row">
+              <span class="knife-badge low"><span class="knife-icon">🔪</span><span class="count">1/3</span></span>
+              <div class="game-items-row">
+                <div class="item-slot disabled">⏪<span class="name">撤销</span></div>
+                <div class="item-slot owned">🔪<span class="name">再切</span></div>
+              </div>
+            </div>
+            <button class="btn btn-primary-sm">✂ 切 割</button>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>低刀数警示（M3+ 可选）：</strong>
+        <ul>
+          <li>刀数 = 1 时，刀数徽章切到红色低刀数样式</li>
+          <li>顶部 hint 变红色"⚠ 最后 1 刀"</li>
+          <li>心理压力 + 引导使用道具</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 04 切割动画 =================== -->
+  <h2><span class="sec-num">04</span>切割动画 CutAnimation</h2>
+  <div class="mock-grid">
+
+    <div class="mock-card">
+      <div class="mock-label">阶段 1 — 刀光划过</div>
+      <div class="phone-frame">
+        <div class="phone-screen cut-anim-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="game-header">
+            <div class="game-back">‹</div>
+            <div class="game-title"><span class="lv-badge">Lv.1</span><span class="name">矩形</span></div>
+            <span class="knife-badge full"><span class="knife-icon">🔪</span><span class="count">3/3</span></span>
+          </div>
+          <div class="cut-anim-stage">
+            <div class="cut-anim-object">
+              <div class="part part-top" style="height: 50%;">
+                <div class="part-inner"></div>
+              </div>
+              <div class="part part-bot" style="top: 50%; height: 50%;">
+                <div class="part-inner"></div>
+              </div>
+              <div class="cut-line glow" style="top: 50%; left: 50%; position: absolute;"></div>
+            </div>
+          </div>
+          <div class="game-footer">
+            <button class="btn btn-primary-sm" style="opacity:.6;">切割中...</button>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>阶段 1 (0-0.2s)：</strong>刀光从左到右划过，物体仍合为一体，但切割线变成金色发光。
+      </div>
+    </div>
+
+    <div class="mock-card">
+      <div class="mock-label">阶段 2 — 分离 + 下落</div>
+      <div class="phone-frame">
+        <div class="phone-screen cut-anim-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="game-header">
+            <div class="game-back">‹</div>
+            <div class="game-title"><span class="lv-badge">Lv.1</span><span class="name">矩形</span></div>
+            <span class="knife-badge full"><span class="knife-icon">🔪</span><span class="count">3/3</span></span>
+          </div>
+          <div class="cut-anim-stage">
+            <div class="cut-anim-object">
+              <div class="part part-top" style="height: 50%;">
+                <div class="part-inner"></div>
+              </div>
+              <div class="part part-bot" style="top: 50%; height: 50%; animation: fall .6s ease-in forwards;">
+                <div class="part-inner"></div>
+                <div class="cut-face"></div>
+              </div>
+            </div>
+            <div class="cut-pct-pop">50%</div>
+          </div>
+          <div class="game-footer">
+            <button class="btn btn-primary-sm" style="opacity:.6;">判定中...</button>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>阶段 2 (0.2-0.7s)：</strong>上下分离 + 下方部分下落 + 屏幕中央弹出比例大字（88px）。
+      </div>
+    </div>
+
+    <div class="mock-card">
+      <div class="mock-label">阶段 3 — 失败 30% 弹出</div>
+      <div class="phone-frame">
+        <div class="phone-screen cut-anim-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="game-header">
+            <div class="game-back">‹</div>
+            <div class="game-title"><span class="lv-badge">Lv.1</span><span class="name">矩形</span></div>
+            <span class="knife-badge"><span class="knife-icon">🔪</span><span class="count">2/3</span></span>
+          </div>
+          <div class="cut-anim-stage">
+            <div class="cut-anim-object">
+              <div class="part part-top" style="height: 30%;">
+                <div class="part-inner"></div>
+              </div>
+              <div class="part part-bot" style="top: 30%; height: 70%; animation: fall .6s ease-in forwards;">
+                <div class="part-inner"></div>
+                <div class="cut-face"></div>
+              </div>
+            </div>
+            <div class="cut-pct-pop" style="color: var(--tier3);">30%</div>
+          </div>
+          <div class="game-footer">
+            <button class="btn btn-primary-sm" style="opacity:.6;">判定中...</button>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>阶段 3：</strong>实际比例按差距档位着色（30% 属 tier3 红色），1 秒后弹出失败画面。
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 05 通关 =================== -->
+  <h2><span class="sec-num">05</span>通关画面 ResultScene</h2>
+  <div class="mock-grid">
+    <div class="mock-card">
+      <div class="mock-label">通关 — 完美 50%</div>
+      <div class="phone-frame">
+        <div class="phone-screen result-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="result-emoji">🎉</div>
+          <div class="result-title">完美！</div>
+          <div class="pct-display win" style="margin: 4px 0; font-size: 80px;">50%</div>
+          <div class="result-stats">
+            <div class="row"><span>尝试次数</span><span class="v gold">5 次</span></div>
+            <div class="row"><span>用时</span><span class="v">23.4 秒</span></div>
+            <div class="row"><span>剩余刀数</span><span class="v">2 / 3</span></div>
+            <div class="row"><span>误差</span><span class="v gold">0.0%</span></div>
+          </div>
+          <div class="result-buttons">
+            <button class="btn btn-primary">▶ 再来一局</button>
+            <button class="btn btn-secondary">返回菜单</button>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>设计要点：</strong>
+        <ul>
+          <li>庆祝 emoji 弹性放大 + 装饰 emoji 漂浮</li>
+          <li>50% 大字 80px 橙色，玩家第一视觉焦点</li>
+          <li>统计区金色边框，强化"差 0.1% 也算输"的成就感</li>
+          <li>MVP 阶段"再来一局"= 重新随机矩形（M4 再加多关卡）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 06 失败 4 档 =================== -->
+  <h2><span class="sec-num">06</span>失败画面 FailScene — 4 档分级</h2>
+  <div class="mock-grid">
+
+    <div class="mock-card">
+      <div class="mock-label gold">Tier 1 — 差 1% (49%) — 黄色</div>
+      <div class="phone-frame">
+        <div class="phone-screen fail-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="fail-emoji">😣</div>
+          <div class="pct-display tier1 fail-pct">49%</div>
+          <span class="fail-msg tier1">差 1%！就差一点了～</span>
+          <div class="fail-detail">
+            切到 <strong>50%</strong> 才算赢<br>
+            剩余刀数：<strong>2/3</strong>
+          </div>
+          <div class="fail-items-row">
+            <div class="item-slot owned">⏪<span class="name">撤销</span></div>
+            <div class="item-slot owned">🔪<span class="name">再切</span></div>
+            <div class="item-slot">
+              <div style="font-size: 22px; font-weight: 800; color: var(--orange);">3</div>
+              <span class="name">秒后撤销</span>
+            </div>
+          </div>
+          <span class="countdown-pill">⏰ <span class="seconds">3</span> 秒后自动撤销</span>
+          <div class="fail-buttons">
+            <button class="btn btn-danger">↻ 重新开始</button>
+            <button class="btn btn-secondary">返回菜单</button>
+          </div>
+        </div>
+      </div>
+      <div class="annotation"><strong>49-51%：</strong>黄色，差 1%！就差一点了～（希望感）</div>
+    </div>
+
+    <div class="mock-card">
+      <div class="mock-label">Tier 2 — 差 4% (46%) — 橙色</div>
+      <div class="phone-frame">
+        <div class="phone-screen fail-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="fail-emoji">😕</div>
+          <div class="pct-display tier2 fail-pct">46%</div>
+          <span class="fail-msg tier2">差 4%，再来！</span>
+          <div class="fail-detail">
+            切到 <strong>50%</strong> 才算赢<br>
+            剩余刀数：<strong>2/3</strong>
+          </div>
+          <div class="fail-items-row">
+            <div class="item-slot owned">⏪<span class="name">撤销</span></div>
+            <div class="item-slot owned">🔪<span class="name">再切</span></div>
+            <div class="item-slot">
+              <div style="font-size: 22px; font-weight: 800; color: var(--orange);">3</div>
+              <span class="name">秒后撤销</span>
+            </div>
+          </div>
+          <span class="countdown-pill">⏰ <span class="seconds">3</span> 秒后自动撤销</span>
+          <div class="fail-buttons">
+            <button class="btn btn-danger">↻ 重新开始</button>
+            <button class="btn btn-secondary">返回菜单</button>
+          </div>
+        </div>
+      </div>
+      <div class="annotation"><strong>45-49% / 51-55%：</strong>橙色，差 X%，再来！（轻度失望）</div>
+    </div>
+
+    <div class="mock-card">
+      <div class="mock-label">Tier 3 — 差 8% (42%) — 红色</div>
+      <div class="phone-frame">
+        <div class="phone-screen fail-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="fail-emoji">😟</div>
+          <div class="pct-display tier3 fail-pct">42%</div>
+          <span class="fail-msg tier3">差 8%，再仔细看看</span>
+          <div class="fail-detail">
+            切到 <strong>50%</strong> 才算赢<br>
+            剩余刀数：<strong>1/3</strong>
+          </div>
+          <div class="fail-items-row">
+            <div class="item-slot owned">⏪<span class="name">撤销</span></div>
+            <div class="item-slot disabled">🔪<span class="name">再切</span></div>
+            <div class="item-slot">
+              <div style="font-size: 22px; font-weight: 800; color: var(--orange);">3</div>
+              <span class="name">秒后撤销</span>
+            </div>
+          </div>
+          <span class="countdown-pill">⏰ <span class="seconds">3</span> 秒后自动撤销</span>
+          <div class="fail-buttons">
+            <button class="btn btn-danger">↻ 重新开始</button>
+            <button class="btn btn-secondary">返回菜单</button>
+          </div>
+        </div>
+      </div>
+      <div class="annotation"><strong>40-45% / 55-60%：</strong>红色，差 X%，再仔细看看（明显失误）</div>
+    </div>
+
+    <div class="mock-card">
+      <div class="mock-label">Tier 4 — 差 25% (25%) — 深红</div>
+      <div class="phone-frame">
+        <div class="phone-screen fail-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="fail-emoji">😅</div>
+          <div class="pct-display tier4 fail-pct">25%</div>
+          <span class="fail-msg tier4">差太远啦，物体中心在哪？</span>
+          <div class="fail-detail">
+            切到 <strong>50%</strong> 才算赢<br>
+            剩余刀数：<strong>1/3</strong>
+          </div>
+          <div class="fail-items-row">
+            <div class="item-slot owned">⏪<span class="name">撤销</span></div>
+            <div class="item-slot owned">🔪<span class="name">再切</span></div>
+            <div class="item-slot">
+              <div style="font-size: 22px; font-weight: 800; color: var(--orange);">3</div>
+              <span class="name">秒后撤销</span>
+            </div>
+          </div>
+          <span class="countdown-pill">⏰ <span class="seconds">3</span> 秒后自动撤销</span>
+          <div class="fail-buttons">
+            <button class="btn btn-danger">↻ 重新开始</button>
+            <button class="btn btn-secondary">返回菜单</button>
+          </div>
+        </div>
+      </div>
+      <div class="annotation"><strong>&lt;40% / &gt;60%：</strong>深红，差太远啦，物体中心在哪？（温柔吐槽）</div>
+    </div>
+
+  </div>
+
+  <!-- =================== 07 道具反馈 =================== -->
+  <h2><span class="sec-num">07</span>道具使用反馈（v0.4 新增）</h2>
+  <div class="mock-grid">
+
+    <div class="mock-card">
+      <div class="mock-label alt">撤销剑 — 切割线回退</div>
+      <div class="phone-frame">
+        <div class="phone-screen game-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="game-header">
+            <div class="game-back">‹</div>
+            <div class="game-title"><span class="lv-badge">Lv.1</span><span class="name">矩形</span></div>
+            <span class="knife-badge full"><span class="knife-icon">🔪</span><span class="count">3/3</span></span>
+          </div>
+          <div class="game-canvas">
+            <div class="toast revoke"><span class="icon">⏪</span>已撤销，回到上次位置</div>
+            <div class="cut-object">
+              <div class="edge-hint top"></div>
+              <div class="edge-hint bot"></div>
+              <div class="cut-line" style="top: 49%;"></div>
+            </div>
+          </div>
+          <div class="game-footer">
+            <div class="game-footer-row">
+              <span class="knife-badge full"><span class="knife-icon">🔪</span><span class="count">3/3</span></span>
+              <div class="game-items-row">
+                <div class="item-slot disabled">⏪<span class="name">撤销</span></div>
+                <div class="item-slot owned">🔪<span class="name">再切</span></div>
+              </div>
+            </div>
+            <button class="btn btn-primary-sm">✂ 切 割</button>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>撤销剑使用流程：</strong>
+        <ul>
+          <li>使用后顶部弹 toast "已撤销，回到上次位置" 0.5s</li>
+          <li>切割线回到上一帧位置（不消耗刀）</li>
+          <li>道具栏撤销槽变灰（已用完）</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mock-card">
+      <div class="mock-label alt">再切一刀 — 直接回到游戏</div>
+      <div class="phone-frame">
+        <div class="phone-screen game-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="game-header">
+            <div class="game-back">‹</div>
+            <div class="game-title"><span class="lv-badge">Lv.1</span><span class="name">矩形</span></div>
+            <span class="knife-badge"><span class="knife-icon">🔪</span><span class="count">3/3</span></span>
+          </div>
+          <div class="game-canvas">
+            <div class="toast win"><span class="icon">🔪</span>已 +1 刀，继续加油！</div>
+            <div class="cut-object">
+              <div class="edge-hint top"></div>
+              <div class="edge-hint bot"></div>
+              <div class="cut-line" style="top: 25%;"></div>
+            </div>
+          </div>
+          <div class="game-footer">
+            <div class="game-footer-row">
+              <span class="knife-badge full"><span class="knife-icon">🔪</span><span class="count">3/3</span></span>
+              <div class="game-items-row">
+                <div class="item-slot disabled">⏪<span class="name">撤销</span></div>
+                <div class="item-slot disabled">🔪<span class="name">再切</span></div>
+              </div>
+            </div>
+            <button class="btn btn-primary-sm">✂ 切 割</button>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>再切一刀使用流程：</strong>
+        <ul>
+          <li>看广告 → 自动 +1 刀 + 直接回到游戏</li>
+          <li>刀数变回 3/3，绿色 toast "已 +1 刀，继续加油！"</li>
+          <li>切割线保持在当前位置（玩家继续微调）</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mock-card">
+      <div class="mock-label alt">减半（v0.5 跟进）</div>
+      <div class="phone-frame">
+        <div class="phone-screen game-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="game-header">
+            <div class="game-back">‹</div>
+            <div class="game-title"><span class="lv-badge">Lv.1</span><span class="name">矩形</span></div>
+            <span class="knife-badge"><span class="knife-icon">🔪</span><span class="count">2/3</span></span>
+          </div>
+          <div class="game-canvas">
+            <div class="toast revoke"><span class="icon">✂️</span>差距减半：60% → 55%</div>
+            <div class="cut-object">
+              <div class="edge-hint top"></div>
+              <div class="edge-hint bot"></div>
+              <div class="cut-line" style="top: 60%; opacity: .3;"></div>
+              <div class="cut-line glow" style="top: 55%;"></div>
+            </div>
+          </div>
+          <div class="game-footer">
+            <div class="game-footer-row">
+              <span class="knife-badge"><span class="knife-icon">🔪</span><span class="count">2/3</span></span>
+              <div class="game-items-row">
+                <div class="item-slot disabled">⏪<span class="name">撤销</span></div>
+                <div class="item-slot disabled">🔪<span class="name">再切</span></div>
+                <div class="item-slot disabled">✂️<span class="name">减半</span></div>
+              </div>
+            </div>
+            <button class="btn btn-primary-sm">✂ 切 割</button>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>减半道具（M4 跟进）：</strong>
+        <ul>
+          <li>原切割线虚化保留，新切割线按差距减半位置显示</li>
+          <li>toast 显示"60% → 55%"提示</li>
+          <li>视觉差让玩家理解"差太多变差一点"的设计意图</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 08 激励视频 =================== -->
+  <h2><span class="sec-num">08</span>激励视频弹窗 RewardAd</h2>
+  <div class="mock-grid">
+    <div class="mock-card">
+      <div class="mock-label gold">看广告获"再切一刀"</div>
+      <div class="phone-frame">
+        <div class="phone-screen" style="background: rgba(20,23,30,.85);">
+          <div class="ad-overlay">
+            <div class="ad-skip">✕</div>
+            <div class="ad-card">
+              <div class="ad-icon">📺</div>
+              <div class="ad-title">看一段短视频</div>
+              <div class="ad-sub">看完即可获得道具奖励<br>支持我们继续做免费好玩的游戏</div>
+              <div class="ad-reward">
+                <div class="emoji">🔪</div>
+                <div class="info">
+                  <div class="name">再切一刀 ×1</div>
+                  <div class="desc">失败后可用，不消耗刀数</div>
+                </div>
+              </div>
+              <button class="btn btn-gold">▶ 观看完整视频（15s）</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>激励视频流程（M5 接入）：</strong>
+        <ul>
+          <li>失败弹窗点道具 → 弹激励视频</li>
+          <li>看完自动获得 + 自动使用</li>
+          <li>右上角 ✕ 跳过按钮（部分平台要求）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 09 GameOver =================== -->
+  <h2><span class="sec-num">09</span>游戏失败 GameOverScene</h2>
+  <div class="mock-grid">
+    <div class="mock-card">
+      <div class="mock-label">3 刀用完 + 无道具</div>
+      <div class="phone-frame">
+        <div class="phone-screen gameover-screen">
+          <div class="status-bar dark"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="gameover-emoji">😢</div>
+          <div class="gameover-title">刀数用完啦</div>
+          <div class="pct-display tier3" style="font-size: 56px; color: var(--gold);">42%</div>
+          <div class="gameover-stats">
+            <div class="row"><span>本次最佳</span><span class="v">49%</span></div>
+            <div class="row"><span>剩余刀数</span><span class="v">0 / 3</span></div>
+            <div class="row"><span>总尝试</span><span class="v">8 次</span></div>
+          </div>
+          <div class="fail-items-row" style="background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.1);">
+            <div class="item-slot disabled" style="background: rgba(255,255,255,.03); border-color: rgba(255,255,255,.1);">⏪<span class="name" style="color: var(--muted);">撤销</span></div>
+            <div class="item-slot disabled" style="background: rgba(255,255,255,.03); border-color: rgba(255,255,255,.1);">🔪<span class="name" style="color: var(--muted);">再切</span></div>
+            <div class="item-slot disabled" style="background: rgba(255,255,255,.03); border-color: rgba(255,255,255,.1);">
+              <div style="font-size: 18px; font-weight: 800; color: #666;">--</div>
+              <span class="name" style="color: var(--muted);">已结束</span>
+            </div>
+          </div>
+          <div class="gameover-buttons">
+            <button class="btn btn-primary">📺 看广告 + 再来</button>
+            <button class="btn btn-secondary">返回菜单</button>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>GameOver 设计：</strong>
+        <ul>
+          <li>深色背景 + 金色主色，区别于普通失败画面</li>
+          <li>本次最佳比例（49%）作为安慰 + 鼓励再来</li>
+          <li>道具栏全部灰色不可用</li>
+          <li>主按钮变金色"看广告 + 再来一局"（核心商业化点）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 10 暂停 =================== -->
+  <h2><span class="sec-num">10</span>暂停页 PauseScene</h2>
+  <div class="mock-grid">
+    <div class="mock-card">
+      <div class="mock-label">游戏中按返回</div>
+      <div class="phone-frame">
+        <div class="phone-screen pause-screen">
+          <div class="status-bar dark"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div style="flex:1; position: relative; opacity: .4;">
+            <div class="game-canvas" style="height: 100%;">
+              <div class="cut-object" style="opacity: .5;">
+                <div class="edge-hint top"></div>
+                <div class="edge-hint bot"></div>
+                <div class="cut-line" style="top: 50%;"></div>
+              </div>
+            </div>
+          </div>
+          <div class="pause-card">
+            <div class="pause-emoji">⏸</div>
+            <div class="pause-title">游戏暂停</div>
+            <div class="pause-buttons">
+              <button class="btn btn-primary-sm">▶ 继续游戏</button>
+              <button class="btn btn-secondary">↻ 重新开始</button>
+              <button class="btn btn-secondary">返回菜单</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>暂停页：</strong>
+        <ul>
+          <li>顶部透明 + 游戏画布模糊 + 弹出居中卡片</li>
+          <li>3 个选项：继续 / 重新开始 / 返回菜单</li>
+          <li>半透明遮罩 + 模糊背景让玩家记得当前进度</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 11 设置 =================== -->
+  <h2><span class="sec-num">11</span>设置页 SettingsScene</h2>
+  <div class="mock-grid">
+    <div class="mock-card">
+      <div class="mock-label">设置 — 完整版</div>
+      <div class="phone-frame">
+        <div class="phone-screen settings-screen">
+          <div class="status-bar"><span>9:41</span><span>📶 5G 100%</span></div>
+          <div class="game-header">
+            <div class="game-back">‹</div>
+            <div class="game-title"><span class="name">设置</span></div>
+            <div style="width: 36px;"></div>
+          </div>
+          <div class="settings-content">
+            <div class="settings-group">
+              <div class="settings-item">
+                <div class="left">
+                  <div class="icon">🎵</div>
+                  <div>
+                    <div class="name">背景音乐</div>
+                    <div class="desc">主菜单 + 游戏内</div>
+                  </div>
+                </div>
+                <div class="toggle on"></div>
+              </div>
+              <div class="settings-item">
+                <div class="left">
+                  <div class="icon">🔊</div>
+                  <div>
+                    <div class="name">音效</div>
+                    <div class="desc">切割 / 通关 / 失败</div>
+                  </div>
+                </div>
+                <div class="toggle on"></div>
+              </div>
+              <div class="settings-item">
+                <div class="left">
+                  <div class="icon">📳</div>
+                  <div>
+                    <div class="name">震动反馈</div>
+                    <div class="desc">切割成功时震动</div>
+                  </div>
+                </div>
+                <div class="toggle"></div>
+              </div>
+            </div>
+
+            <div class="settings-group">
+              <div class="settings-item">
+                <div class="left">
+                  <div class="icon" style="background: var(--gold-soft); color: var(--gold-deep);">⭐</div>
+                  <div>
+                    <div class="name">每日挑战</div>
+                    <div class="desc">每天一个新关卡（M4）</div>
+                  </div>
+                </div>
+                <div class="toggle on"></div>
+              </div>
+              <div class="settings-item">
+                <div class="left">
+                  <div class="icon" style="background: var(--mint-soft); color: var(--mint-deep);">📊</div>
+                  <div>
+                    <div class="name">历史记录</div>
+                    <div class="desc">最近 50 次尝试</div>
+                  </div>
+                </div>
+                <span style="color: var(--muted); font-size: 14px;">›</span>
+              </div>
+            </div>
+
+            <div class="settings-group">
+              <div class="settings-item">
+                <div class="left">
+                  <div class="icon" style="background: #FEE2E2; color: #DC2626;">🗑</div>
+                  <div>
+                    <div class="name">清除所有数据</div>
+                    <div class="desc">关卡进度 + 道具记录</div>
+                  </div>
+                </div>
+                <span style="color: #DC2626; font-size: 13px; font-weight: 700;">删除</span>
+              </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 24px; color: var(--muted); font-size: 11px;">
+              切一半 v0.4 · 2026.06
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>设置分组：</strong>
+        <ul>
+          <li>音频：背景音乐 / 音效 / 震动（3 个开关）</li>
+          <li>功能：每日挑战（M4）/ 历史记录</li>
+          <li>危险区：清除所有数据（红色删除入口）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 设计规范摘要 =================== -->
+  <h2><span class="sec-num">12</span>设计规范摘要</h2>
+
+  <h3>调色板（来自 PRD 5.2）</h3>
+  <div class="color-swatch">
+    <div class="swatch" style="background: var(--orange); color: #fff;">
+      <div class="hex">#FF7F50</div>
+      <div class="name">主橙 · Primary</div>
+    </div>
+    <div class="swatch" style="background: var(--orange-deep); color: #fff;">
+      <div class="hex">#E66A3D</div>
+      <div class="name">深橙 · Shadow</div>
+    </div>
+    <div class="swatch" style="background: var(--mint); color: #1A7A36;">
+      <div class="hex">#98FB98</div>
+      <div class="name">薄荷 · Accent</div>
+    </div>
+    <div class="swatch" style="background: var(--gold); color: #8B6A00;">
+      <div class="hex">#FFD700</div>
+      <div class="name">金黄 · Highlight</div>
+    </div>
+    <div class="swatch" style="background: var(--cream); color: var(--text); border: 1px solid var(--line);">
+      <div class="hex">#FFF8F0</div>
+      <div class="name">米白 · Bg</div>
+    </div>
+    <div class="swatch" style="background: var(--ink); color: #fff;">
+      <div class="hex">#14171E</div>
+      <div class="name">墨黑 · Ink</div>
+    </div>
+  </div>
+
+  <h3>失败 4 档情绪色</h3>
+  <div class="color-swatch">
+    <div class="swatch" style="background: var(--tier1); color: #fff;">
+      <div class="hex">#F59E0B</div>
+      <div class="name">Tier 1 · 49-51%</div>
+    </div>
+    <div class="swatch" style="background: var(--tier2); color: #fff;">
+      <div class="hex">#EA580C</div>
+      <div class="name">Tier 2 · 45-49/51-55</div>
+    </div>
+    <div class="swatch" style="background: var(--tier3); color: #fff;">
+      <div class="hex">#DC2626</div>
+      <div class="name">Tier 3 · 40-45/55-60</div>
+    </div>
+    <div class="swatch" style="background: var(--tier4); color: #fff;">
+      <div class="hex">#991B1B</div>
+      <div class="name">Tier 4 · &lt;40/&gt;60</div>
+    </div>
+  </div>
+
+  <h3>字体</h3>
+  <div class="spec-grid">
+    <div class="spec-card">
+      <div class="title">中文标题</div>
+      <div class="val">PingFang SC Bold / 思源宋体</div>
+    </div>
+    <div class="spec-card">
+      <div class="title">英文标题</div>
+      <div class="val">DM Serif Display</div>
+    </div>
+    <div class="spec-card">
+      <div class="title">中文正文</div>
+      <div class="val">PingFang SC Regular</div>
+    </div>
+    <div class="spec-card">
+      <div class="title">数字 / 比例</div>
+      <div class="val">Outfit 800 / JetBrains Mono</div>
+    </div>
+  </div>
+
+  <h3>关键尺寸</h3>
+  <div class="spec-grid">
+    <div class="spec-card">
+      <div class="title">主按钮</div>
+      <div class="val">240 × 56px / 圆角 16 / 阴影 4px 偏移</div>
+    </div>
+    <div class="spec-card">
+      <div class="title">次按钮</div>
+      <div class="val">200 × 46px / 圆角 12 / 仅 2px 边框</div>
+    </div>
+    <div class="spec-card">
+      <div class="title">切割线</div>
+      <div class="val">3-4px / 白色 / 12px 模糊发光 / 1px 黑边</div>
+    </div>
+    <div class="spec-card">
+      <div class="title">结果数字</div>
+      <div class="val">通关 80-96px / 失败 56-72px</div>
+    </div>
+    <div class="spec-card">
+      <div class="title">道具槽</div>
+      <div class="val">58 × 58px / 圆角 12 / 2px 橙边</div>
+    </div>
+    <div class="spec-card">
+      <div class="title">刀数徽章</div>
+      <div class="val">圆角胶囊 / 1.5px 橙边 / 14px 文字</div>
+    </div>
+  </div>
+
+  <h3>动效原则</h3>
+  <div class="annotation" style="background: var(--mint-soft); border-color: var(--mint-deep); color: #1A7A36;">
+    <ul>
+      <li><strong>弹性反馈：</strong>按钮点击用 <code>translateY(2px)</code> + 阴影收缩，模拟物理按下</li>
+      <li><strong>缓动曲线：</strong>所有过渡用 <code>cubic-bezier(.4, 0, .2, 1)</code> 或 ease-out，<strong>禁用</strong>linear</li>
+      <li><strong>持续时间：</strong>短反馈 150ms / 页面切换 300ms / 庆祝动画 500ms</li>
+      <li><strong>层级：</strong>toast 400ms slide-down，模态弹窗 200ms scale + fade</li>
+      <li><strong>失败/通关：</strong>emoji 弹性放大 <code>scale(0→1.2→1)</code>，数字 88px pop</li>
+      <li><strong>接近 50%：</strong>切割线右端变金 + 持续 1.2s pulse</li>
+    </ul>
+  </div>
+
+  <h3>Cocos 实现 Checklist</h3>
+  <div class="annotation">
+    <ul>
+      <li>所有颜色 / 字号 / 圆角都进 <strong>全局 CSS 变量</strong>，Cocos 同步进 <code>resources/configs/design.json</code></li>
+      <li>按钮阴影：Cocos 用 <code>box-shadow</code> 等价物 <code>UITransform</code> + <code>Shadow</code> 组件</li>
+      <li>emoji 在 Cocos 中换成预制 <strong>SVG 图标</strong>（避免字体兼容性）</li>
+      <li>切割线用 <code>Graphics</code> 组件绘制，不用 Sprite 帧</li>
+      <li>4 档情绪色映射 <code>function getTier(pct)</code> 集中维护</li>
+      <li>动效用 <code>tween</code>，不用 Animation Editor（MVP 阶段）</li>
+    </ul>
+  </div>
+
+  <footer>
+    切一半 v0.4 · 高保真原型 · 2026-06-04 · 抖音小游戏
+  </footer>
+
+</div>
+</body>
+</html>

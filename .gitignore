@@ -1,0 +1,34 @@
+# 切一半项目 - 根目录 .gitignore
+
+# Cocos Creator 构建产物
+cocos-project/library/
+cocos-project/build/
+cocos-project/temp/
+cocos-project/local/
+
+# Node.js
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# OS 文件
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# 编辑器配置
+.creator/
+
+# 日志
+*.log
+logs/
+
+# Trae AI 缓存
+.trae/

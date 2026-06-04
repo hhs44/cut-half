@@ -1,0 +1,32 @@
+{
+  "__version__": "1.0.6",
+  "designResolution": {
+    "width": 720,
+    "height": 1280,
+    "fitWidth": true,
+    "fitHeight": false
+  },
+  "launchScene": "7672457e-569a-4308-b6cf-4f8f3fe2e64b",
+  "scenes": [
+    {
+      "uuid": "7672457e-569a-4308-b6cf-4f8f3fe2e64b",
+      "url": "db://assets/scenes/MenuScene.scene"
+    },
+    {
+      "uuid": "a3307cab-056d-4f37-bc2f-3d8b86b41605",
+      "url": "db://assets/scenes/GameScene.scene"
+    },
+    {
+      "uuid": "66403110-7b05-4e54-89cc-799490b4a324",
+      "url": "db://assets/scenes/ResultScene.scene"
+    },
+    {
+      "uuid": "f2aa8429-0518-453e-a14b-c920bfff04c5",
+      "url": "db://assets/scenes/FailScene.scene"
+    },
+    {
+      "uuid": "c48f0fbb-73ce-4afb-b337-2a12e1c32fe2",
+      "url": "db://assets/scenes/GameOverScene.scene"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+# Cocos Creator 3.8 — 切一半 MVP
+
+# Build artifacts
+library/
+build/
+temp/
+local/
+
+# Editor backup & generated
+*.backup
+*.orig
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.sublime-project
+*.sublime-workspace
+
+# Cocos
+profile/
+profiles/
+.cocos-project/
+assets/__cocos-project__.json
+
+# Logs
+*.log
+logs/
